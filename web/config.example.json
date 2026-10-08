@@ -3,7 +3,7 @@
     "host": "127.0.0.1",
     "port": 3306,
     "user": "cs2suite",
-    "password": "请改成你的数据库密码",
+    "password": "改成你的数据库密码",
     "database": "cs2suite"
   },
   "web": {
