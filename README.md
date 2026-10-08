@@ -68,20 +68,13 @@ cs2suite/
 
 ## 四、快速部署(三步)
 
-### 1) 数据库(三种方式任选)
-
-**方式 A:路由器/NAS 上用 Docker(推荐给已有 Docker 设备的用户)**
-见 [deploy/docker-router/README.md](deploy/docker-router/README.md) —— 一条命令拉起 MySQL 8,
-含路由器低内存调优、时区、远程授权与防火墙建议。
-
-**方式 B:本机/服务器直接装 MySQL**
+### 1) 数据库
 ```sql
 CREATE DATABASE cs2suite DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 CREATE USER 'cs2suite'@'%' IDENTIFIED BY '你的强密码';
 GRANT ALL ON cs2suite.* TO 'cs2suite'@'%';
 ```
-
-**方式 C:云数据库/VPS** —— 创建库后填好白名单与强密码即可。
+(建表不必手工做:插件首启自动建;**或**导入 `db/schema.sql` 也行,二者等价。)
 (建表不必手工做:插件首启自动建;**或**导入 `db/schema.sql` 也行,二者等价。)
 
 ### 2) 游戏服插件

@@ -35,3 +35,6 @@ desktop.ini
 
 # 菜单发行包下载缓存(成品已放入 deploy/)
 tools/csmm/
+
+# 路由器部署临时脚本与凭据(含密码,绝不入库)
+tools/ssh/
