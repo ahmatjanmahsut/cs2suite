@@ -1,11 +1,11 @@
 # CS2Suite — CS2 多功能整合插件 + 网页换肤面板
 
-把 GitHub 上各品类**最好的 CS2 社区插件**的玩法整合为**一个 CounterStrikeSharp 插件**,
+CS2 社区插件**的玩法整合为**一个 CounterStrikeSharp 插件**,
 配一个**网页端(Web)**完成武器皮肤 / 贴纸的自定义;所有数据统一存放 **MySQL**(连接参数由用户在配置文件中提供)。
 
 ## 一、整合来源对照(GitHub)
 
-| 需求品类 | 采用的最佳插件 | 说明 |
+| 需求品类 | 采用的插件 | 说明 |
 |---|---|---|
 | 练习模式 (practice mode) | **[MatchZy](https://github.com/shobhit-pathak/MatchZy)** ★504 | 业界标准训练/热身插件:无限弹药、冻结时间、位点保存传送、机器人管理、去掉落清除等玩法开关全部整合进 `PracticeModule` |
 | 满十竞技 (10 人排位) | **[MatchZy](https://github.com/shobhit-pathak/MatchZy)** 的 Ready 系统 + 刀局流程 | `CompetitiveModule`:排队 → 满 10 人自动分队(Elo 蛇形平衡)→ 全员准备 → 刀局选边 → MR12 正赛 → 结算写入 Elo/战绩 |
