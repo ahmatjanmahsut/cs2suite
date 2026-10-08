@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+    <AssemblyName>CS2Suite</AssemblyName>
+    <RootNamespace>CS2Suite</RootNamespace>
+    <NoWarn>CS1998;CS0618</NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <!-- 编译期参考;运行时由 CounterStrikeSharp 宿主提供 -->
+    <PackageReference Include="CounterStrikeSharp.API" Version="1.0.376" PrivateAssets="all" ExcludeAssets="runtime" />
+    <!-- 运行期依赖:随插件一起部署到 addons/counterstrikesharp/plugins/CS2Suite/ -->
+    <PackageReference Include="MySqlConnector" Version="2.3.7" />
+  </ItemGroup>
+</Project>

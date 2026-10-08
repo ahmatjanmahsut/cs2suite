@@ -1,0 +1,47 @@
+MIT License
+
+Copyright (c) 2026 CS2Suite contributors
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+--------------------------------------------------------------------------------
+THIRD-PARTY NOTICES
+
+This project integrates gameplay designs and data from the following
+open-source projects. Their licenses apply to the referenced material:
+
+1. Ayrton09/AstraSkins (MIT License)
+   - web/data/*.json (weapon/knife/glove/agent/sticker/keychain/music catalog data)
+   - Econ attribute application approach (ported/reimplemented)
+
+2. Nereziel/cs2-WeaponPaints (GPL-3.0)
+   - Preview images referenced by URL from its website/img CDN (not redistributed here)
+   - Item attribute injection mechanism (reimplemented against the same gamedata signature)
+
+3. LielXD/CS2-WeaponPaints-Website (see upstream repository for license)
+   - Icon manifest lists used to build web/data/icon-map.json (fetched by tools/update-catalog.cjs)
+
+4. shobhit-pathak/MatchZy (GPL-3.0)
+   - Competitive match flow concepts (ready system, knife round) - reimplemented, no code copied
+
+5. NockyCZ/CS2-Deathmatch
+   - Deathmatch feature set concepts (respawn, spawn protection, weapon menu) - reimplemented
+
+Counter-Strike 2 and Steam are trademarks and property of Valve Corporation.
+This project is not affiliated with or endorsed by Valve.

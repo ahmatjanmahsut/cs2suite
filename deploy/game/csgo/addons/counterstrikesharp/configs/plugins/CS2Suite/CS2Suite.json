@@ -1,0 +1,71 @@
+{
+  "Version": 3,
+  "ServerId": "cs2suite-1",
+  "Language": "zh",
+  "PublicWebUrl": "http://your-server-ip:8788",
+  "ChatPrefix": "[CS2Suite]",
+  "Database": {
+    "Host": "127.0.0.1",
+    "Port": 3306,
+    "User": "cs2suite",
+    "Password": "CHANGE_ME_DB_PASSWORD",
+    "Database": "cs2suite",
+    "AutoCreateTables": true,
+    "BindCodeTtlMinutes": 15
+  },
+  "Modes": {
+    "DefaultMode": "deathmatch",
+    "AllowAdminModeSwitch": true,
+    "AllowPlayerModeVote": false
+  },
+  "Practice": {
+    "Enabled": true,
+    "InfiniteAmmo": true,
+    "NoFreezetime": true,
+    "InstantRespawn": true,
+    "EnableGod": true,
+    "SaveTeleportPositions": true,
+    "MaxPositionsPerMap": 50
+  },
+  "Deathmatch": {
+    "Enabled": true,
+    "SpawnProtectionSeconds": 3,
+    "RespawnDelaySeconds": 0,
+    "PointsKill": 1,
+    "PointsHeadshotBonus": 1,
+    "KillstreakAnnounceAt": [5, 10, 15, 20],
+    "AllowWeaponSelection": true,
+    "RefillAmmoOnRound": true,
+    "GiveHelmet": true,
+    "LeaderboardRows": 10
+  },
+  "Competitive": {
+    "Enabled": true,
+    "PlayersRequired": 10,
+    "ReadyTimeoutSeconds": 60,
+    "KnifeRound": true,
+    "MaxRounds": 24,
+    "HalftimeRounds": 12,
+    "RoundTimeSeconds": 115,
+    "OvertimeMaxRounds": 6,
+    "EloKFactor": 32,
+    "EloStartingValue": 1200,
+    "MapPool": ["de_dust2", "de_mirage", "de_inferno", "de_nuke", "de_ancient"],
+    "RecordDemo": false
+  },
+  "Skins": {
+    "Enabled": true,
+    "RequireBoundAccount": true,
+    "RefreshCooldownSeconds": 30,
+    "SyncSeconds": 2,
+    "EnableStickers": true,
+    "MaxStickersPerWeapon": 5,
+    "EnableKeychains": true,
+    "EnableNametags": true,
+    "EnableStatTrak": true,
+    "EnableGloves": true,
+    "EnableAgents": true,
+    "EnableMusicKits": true,
+    "TeamSpecificLoadouts": false
+  }
+}

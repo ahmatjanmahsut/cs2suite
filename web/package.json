@@ -1,0 +1,17 @@
+{
+  "name": "cs2suite-web",
+  "version": "1.0.0",
+  "description": "CS2Suite 网页端 — 账号注册、绑定码绑定、武器皮肤/贴纸自定义(数据全部存 MySQL)",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "express": "^4.22.3",
+    "mysql2": "^3.24.5"
+  }
+}

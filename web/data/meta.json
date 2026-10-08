@@ -1,0 +1,29 @@
+{
+  "updatedAt": "2026-10-08 08:21:25",
+  "sources": {
+    "astra": "https://raw.githubusercontent.com/Ayrton09/AstraSkins/main/data/",
+    "icons": "https://raw.githubusercontent.com/LielXD/CS2-WeaponPaints-Website/master/src/data/",
+    "cdn": "https://raw.githubusercontent.com/Nereziel/cs2-WeaponPaints/main/website/img/skins/"
+  },
+  "counts": {
+    "weapons": 34,
+    "knives": 20,
+    "gloves": 8,
+    "stickers": 11134,
+    "keychains": 78
+  },
+  "icons": {
+    "skins": 2063,
+    "gloves": 94,
+    "stickers": 11143,
+    "keychains": 78,
+    "agents": 64
+  },
+  "coverage": {
+    "weaponSkins": "1449/1449",
+    "knifeSkins": "576/576",
+    "gloves": "94/94",
+    "stickers": "11132/11134"
+  },
+  "changed": []
+}

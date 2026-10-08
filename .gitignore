@@ -1,0 +1,34 @@
+# ---- 敏感配置(绝不入库) ----
+web/config.json
+**/config.local.json
+*.pem
+*.key
+
+# ---- 依赖 ----
+node_modules/
+.pnpm-store/
+
+# ---- .NET 构建产物 ----
+bin/
+obj/
+*.user
+
+# ---- 运行日志 ----
+*.log
+web/server.out.log
+web/server.err.log
+
+# ---- 第三方参考源码(仅本地对照用;均为他人项目,版权归原作者) ----
+# WeaponPaints(GPL-3.0) / MatchZy(GPL-3.0) / AstraSkins(MIT) / CS2-Deathmatch 等
+reference/
+
+# ---- 上游数据缓存(可由 tools/update-catalog.cjs 重新拉取) ----
+tools/upstream/
+tools/icons/
+
+# ---- 编辑器/系统 ----
+.vs/
+.idea/
+.vscode/
+Thumbs.db
+desktop.ini

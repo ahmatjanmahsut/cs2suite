@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CS2Suite · 服务器面板</title>
+<link rel="stylesheet" href="style.css?v=15">
+</head>
+<body>
+<header>
+  <div class="logo">CS2<span>SUITE</span></div>
+  <nav>
+    <a href="#/" class="n-home">首页</a>
+    <a href="#/account" class="n-account hidden">账号与绑定</a>
+    <a href="#/skins" class="n-skins hidden">外观自定义</a>
+    <a href="#/stats" class="n-stats hidden">我的战绩</a>
+    <a href="#/admin" class="n-admin hidden">管理</a>
+    <a href="#/auth" class="n-auth">登录 / 注册</a>
+  </nav>
+  <div class="userbox"><span id="whoami"></span> <a href="#" id="logout" class="hidden">退出</a></div>
+</header>
+<main id="view"></main>
+<div id="toast"></div>
+<template id="tpl-landing">
+  <section class="hero">
+    <h1>武器皮肤 · 贴纸 · 训练 / 死斗 / 满十竞技</h1>
+    <p class="sub">同一账号打通服务器与网页:在网页挑选皮肤与贴纸,进服即刻生效。</p>
+    <ol class="steps">
+      <li><b>注册账号</b><span>在本页面创建你的 CS2Suite 账号</span></li>
+      <li><b>服务器拿码</b><span>进入 CS2 服务器,聊天框输入 <code>/cs2bind</code> 获得 6 位绑定码</span></li>
+      <li><b>绑定 Steam</b><span>回到本页面【账号与绑定】输入绑定码,绑定你的 SteamID</span></li>
+      <li><b>配置外观</b><span>【外观自定义】挑皮肤、贴贴纸、调磨损 — 保存后游戏内约 2 秒自动生效</span></li>
+    </ol>
+    <div class="btnrow"><a class="btn primary" href="#/auth">立即注册</a> <a class="btn" href="#/account">已有账号?去绑定</a></div>
+  </section>
+  <section><h2>服务器状态</h2><div id="servers" class="servers"></div></section>
+</template>
+<template id="tpl-auth">
+  <section class="card auth">
+    <div class="tabs"><button data-t="login" class="tab on">登录</button><button data-t="register" class="tab">注册</button></div>
+    <form id="f-login">
+      <label>用户名 <input name="username" maxlength="32" autocomplete="username"></label>
+      <label>密码 <input name="password" type="password" maxlength="72" autocomplete="current-password"></label>
+      <button class="btn primary">登录</button>
+    </form>
+    <form id="f-register" class="hidden">
+      <label>用户名(3-32 位中文/字母/数字/下划线) <input name="username" maxlength="32" autocomplete="username"></label>
+      <label>邮箱(可选) <input name="email" maxlength="190"></label>
+      <label>密码(至少 8 位) <input name="password" type="password" maxlength="72" autocomplete="new-password"></label>
+      <button class="btn primary">注册</button>
+    </form>
+  </section>
+</template>
+<template id="tpl-account">
+  <section class="card">
+    <h2>绑定码绑定 SteamID</h2>
+    <p class="hint">先在服务器聊天输入 <code>/cs2bind</code> 获取绑定码(15 分钟内有效),然后在下面输入。</p>
+    <form id="f-bind"><input name="code" placeholder="6 位绑定码" maxlength="6" autocomplete="off"><button class="btn primary">绑定</button></form>
+    <h2>已绑定的 SteamID</h2>
+    <div id="mySteam" class="steamlist"></div>
+    <p class="hint">解绑也可在服务器内使用 <code>/cs2unbind</code>。</p>
+  </section>
+</template>
+<template id="tpl-skins">
+  <section class="skins">
+    <div class="toolbar">
+      <select id="steamPick"></select>
+      <select id="teamPick"><option value="">统一配置(T/CT 共用)</option><option value="ct">仅 CT</option><option value="t">仅 T</option></select>
+      <button id="saveBtn" class="btn primary">保存全部</button>
+      <button id="resetBtn" class="btn">清空当前武器</button>
+      <span id="dirtyFlag" class="dirty"></span>
+    </div>
+    <div class="skinbody">
+      <aside id="slotList" class="slots"></aside>
+      <div id="slotDetail" class="detail"><p class="hint">← 选择一件武器开始配置</p></div>
+    </div>
+  </section>
+</template>
+<template id="tpl-stats">
+  <section class="card"><h2>我的战绩</h2><div id="statsBody"></div></section>
+</template>
+<template id="tpl-admin">
+  <section class="card"><h2>用户管理</h2><div id="adminBody"></div></section>
+</template>
+<script src="app.js?v=15"></script>
+</body>
+</html>
