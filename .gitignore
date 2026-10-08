@@ -38,3 +38,6 @@ tools/csmm/
 
 # 路由器部署临时脚本与凭据(含密码,绝不入库)
 tools/ssh/
+
+# 本机部署记录(含数据库凭据,绝不入库)
+DEPLOY-MYSQL-ROUTER.md
