@@ -19,6 +19,10 @@ CS2 社区插件**的玩法整合为**一个 CounterStrikeSharp 插件**,
 ## 二、功能总览
 
 ### 服务器插件(单 DLL)
+- **🎮 游戏内整合菜单(v1.4 新增)**:`!menu` / `!cs2` 一键打开**单一菜单**,涵盖全部功能与外观调整。
+  用 **W/S 移动高亮(面板光标走位)、E 确认、Shift 返回上级、Tab 关闭**(基于 CS2MenuManager 的 WASD 菜单)。
+  - 菜单树:训练模式 / 死斗 / 满十竞技 / **我的外观** / 服务器设置(管理员)
+  - **禁用规则:竞技或死斗进行中,除【我的外观】外全部灰显禁用;管理员不受限制**
 - **玩法模式**:`/cs2mode practice|dm|competitive|none`(管理员),或配置默认模式。非玩法时段为"仅外观"模式。
 - **训练模式**:`/practice`、`/god`、`/savepos <名字>`、`/tp <名字>`、`/positions`、`/delpos`、`/addbot ct|t`、`/clearweapons`
 - **死斗**:`/dm`、`/guns`、`/gun ak47|awp|random|knifeonly`、`/dmsettings hud|sound`、`/dmtop`(排行榜)
@@ -75,6 +79,7 @@ GRANT ALL ON cs2suite.* TO 'cs2suite'@'%';
 ### 2) 游戏服插件
 前置:[安装 CounterStrikeSharp(带 RUNTIME)](https://docs.cssharp.dev/docs/guides/getting-started.html)。
 1. 把 `deploy/game/csgo/addons/counterstrikesharp/` 合并覆盖到服务器 `game/csgo/addons/counterstrikesharp/`
+   (含游戏内菜单所需:CS2MenuManager 伴随插件与 `shared/CS2MenuManager/config.toml`)
    (得到 `plugins/CS2Suite/`、`gamedata/cs2suite.json`、`configs/plugins/CS2Suite/CS2Suite.json`、`www? 无`)
 2. 编辑 `configs/plugins/CS2Suite/CS2Suite.json` 的 `Database` 段(Host/Port/User/Password/Database)和 `PublicWebUrl`(你的网页地址)
 3. **关键**:`configs/core.json` 里 `"FollowCS2ServerGuidelines": false`(换肤需要写物品属性,官方规则默认禁止——只在内战/娱乐服使用)
@@ -129,6 +134,51 @@ UPDATE cs2suite_accounts SET role='admin' WHERE username='你的名字';
 - Web 端到端:注册 → 登录 → 绑定码消费 → 保存皮肤/贴纸/刀/手套/探员 → 回读校验:**全部通过**
 - 前端 app.js / 后端 server.js 均通过 `node --check` 语法验证
 
+## 八a-1、v1.4 更新(游戏内整合菜单)
+
+按需求采用**方案 B**:引入 [CS2MenuManager](https://github.com/schwarper/CS2MenuManager)(★49)的 `WasdMenu`,
+把全部功能与外观调整整合进**单一游戏内菜单**。
+
+### 交互
+- 打开:`!menu` / `!cs2` / `!cs2menu`(控制台或聊天框都可用)
+- **W / S** 上下移动高亮(即面板上的光标走位)、**E** 确认、**Shift** 返回上级、**Tab** 关闭
+- 打开时主动聊天提示,避免玩家误以为走位卡住(菜单会冻结移动以接管 W/S)
+
+### 菜单树
+```
+CS2Suite 主菜单
+├── 训练模式        进入模式 / 无敌开关 / 位点保存·传送·列表 / 加机器人 / 清场地
+├── 死斗            进入模式 / 选主武器(18 种) / 随机枪 / 刀战开关 / 音效·HUD / 排行榜
+├── 满十竞技        进入模式·排队 / 准备·取消 / Elo 与阶段显示 / 选边 / 比赛详情
+├── 我的外观        ★ 比赛进行中仍可用:刷新外观 / 绑定码 / 网页面板入口
+└── 服务器(管理员)   切换四种玩法模式 / 取消比赛
+```
+
+### 禁用规则(按你的要求实现)
+- 竞技进行中(刀局 / 选边 / 正赛)或死斗进行中 → 除【我的外观】外所有项**灰显禁用**
+- **管理员不受限制**(`@css/kick` / `@root` / `@custom/cs2suite_admin`);服务器设置项仅管理员可见
+- 实现:每次打开菜单**按当前状态重建菜单树**(禁用态实时准确),并在每个回调内**二次校验**,
+  防止「菜单已打开、此时比赛刚好开始」的漏判
+
+### 依赖与部署(重要)
+菜单框架是**独立伴随插件 + 共享 API**结构,`deploy/` 已含全部所需文件:
+```
+addons/counterstrikesharp/
+├── plugins/CS2Suite/                     CS2Suite.dll + CS2MenuManager.dll + Dapper.dll + Tomlyn.dll + MySqlConnector.dll + lang/
+├── plugins/CS2MenuManager_MenuManager/   菜单伴随插件(含中文语言包)
+└── shared/CS2MenuManager/                config.toml(按键/配色,默认已是 W/S/E/Shift/Tab)+ 运行库
+```
+改按键或配色:编辑 `shared/CS2MenuManager/config.toml` 的 `[Buttons]` 与 `[WasdMenu]` 段。
+
+### 工程上避掉的一个坑
+引入菜单包后 dotnet 默认会把它**全部传递依赖(43 个 DLL)**复制进插件目录,其中 **36 个**
+(`Microsoft.Extensions.*`、`Serilog.*`、`FastGenericNew`、`McMaster.*` 等)是 **CSS 宿主已自带**的,
+重复分发会导致版本冲突(社区插件常见翻车点)。已在 `CS2Suite.csproj` 增加
+`PruneHostProvidedAssemblies` 构建目标自动剔除 → **最终只分发 5 个 DLL**。
+
+### 许可证变更
+因 CS2MenuManager 为 **GPL-3.0-only**,本项目许可证**由 MIT 变更为 GNU GPL-3.0**(见 `LICENSE`),
+并顺带更正第三方声明中 MatchZy 的错误标注(实为 MIT)。
 ## 八a、全仓库代码审计(2026-10 本轮)
 
 本轮审计范围:web 前后端(Node/浏览器双端)、MySQL schema、插件增量改动、部署包一致性。
@@ -260,7 +310,20 @@ node tools/update-catalog.cjs --no-probe   # 快速:只拉目录,保留已有预
 > 只有**全新武器**(新 defindex)才必须等目录更新。
 
 ## 十、开源许可
-本项目代码 MIT;皮肤/贴纸目录数据(`web/data/`)来自 [Ayrton09/AstraSkins](https://github.com/Ayrton09/AstraSkins)(MIT);
-玩法设计整合参考 [MatchZy](https://github.com/shobhit-pathak/MatchZy)(GPL-3.0 思路重写,未复制其代码)、
-[NockyCZ/CS2-Deathmatch](https://github.com/NockyCZ/CS2-Deathmatch)、[Nereziel/cs2-WeaponPaints](https://github.com/Nereziel/cs2-WeaponPaints)(其注入机制按 gamedata 签名重实现)。
-Steam/CS2 为 Valve 财产;本项目与 Valve 无关。
+
+**本项目以 GNU GPL-3.0 分发。** 原因是游戏内菜单链接了
+[schwarper/CS2MenuManager](https://github.com/schwarper/CS2MenuManager)(**GPL-3.0-only**),
+GPL 的传染性要求衍生作品同样以 GPL-3.0 发布。完整条款见 `LICENSE`(文末附第三方声明)。
+
+第三方组件与来源:
+
+| 项目 | 许可证 | 使用方式 |
+|---|---|---|
+| schwarper/CS2MenuManager | **GPL-3.0** | 链接为菜单框架(提供 WASD 菜单),随 `deploy/` 分发 |
+| Ayrton09/AstraSkins | MIT | `web/data/*.json` 目录数据(武器/刀/手套/探员/贴纸/挂饰/音乐包) |
+| Nereziel/cs2-WeaponPaints | GPL-3.0 | 预览图**仅按 URL 引用**其图包 CDN(仓库内不分发图片);注入机制按同款公开 gamedata 签名重实现 |
+| LielXD/CS2-WeaponPaints-Website | 见上游 | 图标清单,由 `tools/update-catalog.cjs` 拉取 |
+| shobhit-pathak/MatchZy | **MIT**(此前误标为 GPL-3.0,已更正) | 竞技流程思路重写,未复制代码 |
+| NockyCZ/CS2-Deathmatch | 见上游 | 死斗玩法思路重写,未复制代码 |
+
+Counter-Strike 2 与 Steam 为 Valve 财产;本项目与 Valve 无关。

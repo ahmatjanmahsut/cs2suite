@@ -3,15 +3,37 @@
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
     <AssemblyName>CS2Suite</AssemblyName>
     <RootNamespace>CS2Suite</RootNamespace>
     <NoWarn>CS1998;CS0618</NoWarn>
+    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+    <!-- 仅把下面显式列出的依赖复制到输出目录。
+         CounterStrikeSharp 宿主已经自带 Microsoft.Extensions.* / Serilog / McMaster 等 36 个程序集,
+         若我们也分发同名文件会引发版本冲突(社区插件的经典翻车点)。 -->
+    <PrivateAssetsForDeps>false</PrivateAssetsForDeps>
   </PropertyGroup>
+
   <ItemGroup>
     <!-- 编译期参考;运行时由 CounterStrikeSharp 宿主提供 -->
     <PackageReference Include="CounterStrikeSharp.API" Version="1.0.376" PrivateAssets="all" ExcludeAssets="runtime" />
-    <!-- 运行期依赖:随插件一起部署到 addons/counterstrikesharp/plugins/CS2Suite/ -->
-    <PackageReference Include="MySqlConnector" Version="2.3.7" />
+    <!-- 菜单框架(WASD 导航)。GPL-3.0,本项目因此以 GPL-3.0 分发 -->
+    <PackageReference Include="CS2MenuManager" Version="1.0.43" />
+    <!-- 数据库驱动:CS2MenuManager 要求 >=2.4.0,我们统一用 2.4.0 -->
+    <PackageReference Include="MySqlConnector" Version="2.4.0" />
   </ItemGroup>
+
+  <!-- 复制依赖后,剔除 CSS 宿主已提供的程序集,避免运行时版本冲突 -->
+  <Target Name="PruneHostProvidedAssemblies" AfterTargets="Build">
+    <ItemGroup>
+      <HostProvided Include="$(OutputPath)FastGenericNew.dll" />
+      <HostProvided Include="$(OutputPath)McMaster.NETCore.Plugins.dll" />
+      <HostProvided Include="$(OutputPath)Microsoft.DotNet.PlatformAbstractions.dll" />
+      <HostProvided Include="$(OutputPath)Microsoft.Extensions.*.dll" />
+      <HostProvided Include="$(OutputPath)Scrutor.dll" />
+      <HostProvided Include="$(OutputPath)Serilog*.dll" />
+      <HostProvided Include="$(OutputPath)System.Diagnostics.EventLog.dll" />
+    </ItemGroup>
+    <Delete Files="@(HostProvided)" ContinueOnError="true" />
+    <Message Importance="high" Text="[CS2Suite] 已剔除宿主自带程序集 @(HostProvided->'%(Filename)%(Extension)', ', ')" Condition="'@(HostProvided)' != ''" />
+  </Target>
 </Project>

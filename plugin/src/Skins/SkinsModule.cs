@@ -187,6 +187,34 @@ public sealed class SkinsModule : ModuleBase
         });
     }
 
+    /// <summary>菜单用:立即从数据库刷新我的外观(等价 /cs2skrefresh,菜单里不受冷却限制之外的约束)。</summary>
+    internal void MenuRefresh(CCSPlayerController player)
+    {
+        if (!Cfg.Skins.Enabled) { Tell(player, "disabled"); return; }
+        var steam = SteamId64(player);
+        _refreshCooldown.Remove(steam);   // 菜单主动刷新不受命令冷却限制
+        _ = Task.Run(async () =>
+        {
+            var bound = await Plugin.Bind.CheckBoundAsync(steam);
+            var lo = (bound || !Cfg.Skins.RequireBoundAccount) ? await LoadFromDbAsync(steam) : null;
+            Server.NextFrame(() =>
+            {
+                if (!player.IsValid) return;
+                if (lo is not null) { lo.Bound = bound; _cache[steam] = lo; ApplyTo(player); Tell(player, "refresh_done", ("n", lo.Items.Count)); }
+                else if (!bound && Cfg.Skins.RequireBoundAccount) Tell(player, "need_bind_hint", ("url", Cfg.PublicWebUrl));
+                else Tell(player, "refresh_empty", ("url", Cfg.PublicWebUrl));
+            });
+        });
+    }
+
+    /// <summary>菜单用:当前绑定的 SteamID 是否已配置外观(用于菜单副标题)。</summary>
+    internal string SkinSummary(CCSPlayerController player)
+    {
+        var steam = SteamId64(player);
+        if (Cfg.Skins.RequireBoundAccount && !Plugin.Bind.IsBoundCached(steam)) return "未绑定网页账号";
+        return _cache.TryGetValue(steam, out var lo) ? $"已配置 {lo.Items.Count} 件(含 {lo.Stickers.Count} 组贴纸)" : "尚未配置外观";
+    }
+
     internal void Forget(CCSPlayerController player)
     {
         var steam = SteamId64(player);

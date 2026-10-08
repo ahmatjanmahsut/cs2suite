@@ -39,6 +39,23 @@ public sealed class CompetitiveModule : ModuleBase
     /// 半场/加时的引擎换边全部自动兼容,不再依赖手工维护的取反标志。</summary>
     private bool _blueIsTNow;
 
+    /// <summary>刀局/选边/正赛阶段视为"比赛进行中"(菜单据此禁用非外观项)。</summary>
+    internal bool IsMatchInProgress => _phase is Phase.Knife or Phase.KnifePick or Phase.Live;
+
+    /// <summary>供菜单显示的当前阶段文本。</summary>
+    internal string PhaseText => _phase switch
+    {
+        Phase.Idle => "等待排队",
+        Phase.Ready => "确认准备中",
+        Phase.Knife => "刀局",
+        Phase.KnifePick => "胜方选边",
+        Phase.Live => $"正赛 {_score1}:{_score2}",
+        _ => "-",
+    };
+
+    internal int QueueCount => _queue.Count;
+    internal int ReadyCount => _queue.Count(q => q.Ready);
+
     internal void OnRoundPrestart()
     {
         if (_phase is not (Phase.Knife or Phase.KnifePick or Phase.Live)) return;
@@ -168,6 +185,48 @@ public sealed class CompetitiveModule : ModuleBase
         Cvar("mp_warmup_pausetimer", "0");
         Cvar("mp_warmup_end", "");
     }
+
+    /// <summary>菜单用:加入/退出队列。</summary>
+    internal void MenuToggleQueue(CCSPlayerController player)
+    {
+        var steam = SteamId64(player);
+        if (_queue.Any(q => q.Steam == steam))
+        {
+            if (_phase == Phase.Live && _teamOf.ContainsKey(steam)) { Tell(player, "match_live_leave_ban"); return; }
+            _queue.RemoveAll(q => q.Steam == steam);
+            LogQ("leave", steam, player.PlayerName);
+            Tell(player, "queue_left");
+            if (_phase == Phase.Ready && _queue.Count(q => q.Ready) < Cfg.Competitive.PlayersRequired) Cancel("queue-shrank");
+        }
+        else
+        {
+            if (_phase is Phase.Knife or Phase.KnifePick or Phase.Live) { Tell(player, "match_live"); return; }
+            int cap = Math.Max(Cfg.Competitive.PlayersRequired, Cfg.Competitive.PlayersRequired * 2);
+            if (_queue.Count >= cap) { Tell(player, "queue_full"); return; }
+            _queue.Add(new Queued { Steam = steam, Controller = player, Since = DateTime.UtcNow, Elo = GetElo(steam) });
+            LogQ("join", steam, player.PlayerName);
+            Tell(player, "queue_joined", ("n", _queue.Count), ("need", Cfg.Competitive.PlayersRequired));
+            if (_phase == Phase.Idle && _queue.Count >= Cfg.Competitive.PlayersRequired && CountPlayingHumans() >= 2)
+                StartReadyPhase();
+        }
+    }
+
+    /// <summary>菜单用:准备确认。</summary>
+    internal void MenuSetReady(CCSPlayerController player, bool ready)
+    {
+        if (_phase != Phase.Ready) { Tell(player, "no_ready_phase"); return; }
+        var q = _queue.FirstOrDefault(x => x.Steam == SteamId64(player));
+        if (q is null) { Tell(player, "queue_not_in"); return; }
+        q.Ready = ready;
+        LogQ(ready ? "ready" : "notready", q.Steam, player.PlayerName);
+        Broadcast("ready_count", ("n", _queue.Count(x => x.Ready)), ("need", Cfg.Competitive.PlayersRequired));
+        if (_queue.Count(x => x.Ready) >= Cfg.Competitive.PlayersRequired) StartMatch();
+    }
+
+    internal bool InQueue(CCSPlayerController player) => _queue.Any(q => q.Steam == SteamId64(player));
+
+    /// <summary>菜单用:我的 Elo(直接返回缓存值,避免异步菜单渲染)。</summary>
+    internal int MyElo(CCSPlayerController player) => GetElo(SteamId64(player));
 
     private static readonly Random Rng = new();
 

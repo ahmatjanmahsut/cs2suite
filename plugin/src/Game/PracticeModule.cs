@@ -131,6 +131,36 @@ public sealed class PracticeModule : ModuleBase
         Tell(player, on ? "god_on" : "god_off");
     }
 
+    /// <summary>菜单用:切换无敌(与 /god 同一逻辑)。</summary>
+    internal void MenuToggleGod(CCSPlayerController player)
+    {
+        if (!IsActive) { Tell(player, "practice_only"); return; }
+        if (!Cfg.Practice.EnableGod) { Tell(player, "disabled"); return; }
+        var steam = SteamId64(player);
+        var on = !_godMode.GetValueOrDefault(steam);
+        _godMode[steam] = on;
+        SetGod(steam, on);
+        Tell(player, on ? "god_on" : "god_off");
+    }
+
+    internal bool GodOn(CCSPlayerController player) => _godMode.GetValueOrDefault(SteamId64(player));
+
+    /// <summary>菜单用:清除地面掉落。</summary>
+    internal void MenuClearGround(CCSPlayerController player)
+    {
+        if (!IsActive) { Tell(player, "practice_only"); return; }
+        RemoveGround();
+        Tell(player, "cleared");
+    }
+
+    /// <summary>菜单用:添加机器人。</summary>
+    internal void MenuAddBot(CCSPlayerController player, string side)
+    {
+        if (!IsActive) { Tell(player, "practice_only"); return; }
+        Server.ExecuteCommand(side switch { "ct" => "bot_add_ct", "t" => "bot_add_t", _ => "bot_add" });
+        Tell(player, "bot_added");
+    }
+
     private void SetGod(string steam, bool on)
     {
         foreach (var p in Utilities.GetPlayers())

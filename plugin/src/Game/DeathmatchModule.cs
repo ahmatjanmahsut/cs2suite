@@ -12,6 +12,49 @@ namespace CS2Suite.Game;
 /// /dm !guns !gun <武器>|random|knifeonly !dmsettings hud|sound !dmtop
 public sealed class DeathmatchModule : ModuleBase
 {
+    /// <summary>死斗模式激活即视为"比赛进行中"(菜单据此禁用非外观项)。</summary>
+    internal bool IsMatchInProgress => IsActive;
+
+    /// <summary>供菜单显示当前选枪状态。</summary>
+    internal string CurrentPrimary(string steam)
+        => _prefs.TryGetValue(steam, out var p) ? p.GetValueOrDefault("primary", "默认") : "默认";
+
+    internal bool KnifeOnly => _knifeOnly;
+
+    /// <summary>菜单用:设置主武器(与 !gun 命令同一逻辑)。</summary>
+    internal void MenuSetPrimary(CCSPlayerController player, string key)
+    {
+        var steam = SteamId64(player);
+        var map = _prefs.TryGetValue(steam, out var m) ? m : _prefs[steam] = new Dictionary<string, string>();
+        map["primary"] = key;
+        SavePrefs(steam, map);
+        Tell(player, "gun_set", ("w", key));
+        if (player.PawnIsAlive && PrimaryName(key, player.Team) is { } name)
+        {
+            StripGuns(player);
+            player.GiveNamedItem(name);
+            if (Cfg.Deathmatch.GiveHelmet) player.GiveNamedItem("item_heavyassaultsuit");
+        }
+    }
+
+    internal void MenuToggleKnifeOnly(CCSPlayerController player)
+    {
+        _knifeOnly = !_knifeOnly;
+        Tell(player, _knifeOnly ? "gun_knife_on" : "gun_knife_off");
+        if (_knifeOnly)
+            foreach (var p in Utilities.GetPlayers())
+                if (p.IsValid && !p.IsBot && p.PawnIsAlive) StripGuns(p);
+    }
+
+    internal void MenuTogglePref(CCSPlayerController player, string key)
+    {
+        var steam = SteamId64(player);
+        var map = _prefs.TryGetValue(steam, out var m) ? m : _prefs[steam] = new Dictionary<string, string>();
+        var val = Toggle(map, key);
+        SavePrefs(steam, map);
+        Tell(player, "dmsettings_saved", ("k", key), ("v", val));
+    }
+
     private sealed record DmScore(int Kills, int Deaths, int Points, int Streak);
     private readonly Dictionary<string, DmScore> _board = new();
     private readonly Dictionary<string, string> _names = new();

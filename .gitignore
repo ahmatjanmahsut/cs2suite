@@ -32,3 +32,6 @@ tools/icons/
 .vscode/
 Thumbs.db
 desktop.ini
+
+# 菜单发行包下载缓存(成品已放入 deploy/)
+tools/csmm/

@@ -8,6 +8,7 @@ using CounterStrikeSharp.API.Modules.Utils;
 using Microsoft.Extensions.Logging;
 using CS2Suite.Core;
 using CS2Suite.Game;
+using CS2Suite.Menu;
 using CS2Suite.Skins;
 
 namespace CS2Suite;
@@ -32,6 +33,7 @@ public sealed class CS2SuitePlugin : BasePlugin, IPluginConfig<CS2SuiteConfig>
     internal CompetitiveModule Competitive = null!;
     internal SkinsModule Skins = null!;
     internal BindModule Bind = null!;
+    internal GameMenuModule GameMenu = null!;
 
     internal string ActiveGameMode = "none";
 
@@ -48,8 +50,9 @@ public sealed class CS2SuitePlugin : BasePlugin, IPluginConfig<CS2SuiteConfig>
         Competitive = new CompetitiveModule(this);
         Bind = new BindModule(this);
         Skins = new SkinsModule(this);
+        GameMenu = new GameMenuModule(this);
 
-        foreach (var m in new ModuleBase[] { Practice, Dm, Competitive, Bind, Skins })
+        foreach (var m in new ModuleBase[] { Practice, Dm, Competitive, Bind, Skins, GameMenu })
             m.Initialize();
 
         AddCommand("cs2mode", "CS2Suite: switch game mode /cs2mode practice|dm|competitive|none", OnModeCommand);
@@ -98,7 +101,7 @@ public sealed class CS2SuitePlugin : BasePlugin, IPluginConfig<CS2SuiteConfig>
     {
         if (disposing)
         {
-            foreach (var m in new ModuleBase[] { Practice, Dm, Competitive, Bind, Skins })
+            foreach (var m in new ModuleBase[] { Practice, Dm, Competitive, Bind, Skins, GameMenu })
             {
                 try { m.Unload(); } catch { }
             }
