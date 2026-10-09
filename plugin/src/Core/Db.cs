@@ -12,11 +12,16 @@ public sealed class Db : IDisposable
     private readonly DatabaseConfig _cfg;
     private readonly ILogger _log;
     public string ServerIdRef = "cs2suite";
+    public void SetServerId(string? id) { if (!string.IsNullOrWhiteSpace(id)) ServerIdRef = id!; }
 
     private string ConnString =>
-        $"Server={_cfg.Host};Port={_cfg.Port};Database={_cfg.Database};" +
+        BaseConnString + $"Database={_cfg.Database};";
+
+    /// <summary>不含库名的连接串(建库探测用)。ConnectionTimeout 给足,避免游戏进程启动期线程池繁忙导致握手超时。</summary>
+    private string BaseConnString =>
+        $"Server={_cfg.Host};Port={_cfg.Port};" +
         $"Uid={_cfg.User};Password={_cfg.Password};SslMode=Preferred;Pooling=true;" +
-        "MaximumPoolSize=24;ConnectionTimeout=5;Charset=utf8mb4;AllowPublicKeyRetrieval=True;";
+        "MaximumPoolSize=16;ConnectionTimeout=15;Charset=utf8mb4;AllowPublicKeyRetrieval=True;";
 
     /// <summary>数据库(含表结构)是否可用。false 时各模块降级为纯内存玩法。</summary>
     public volatile bool Ready;
@@ -113,21 +118,25 @@ public sealed class Db : IDisposable
             // 先尝试建库(需要建库权限;没有则要求用户已手工导入 schema,见 README)
             try
             {
-                await using var c = new MySqlConnection(
-                    $"Server={_cfg.Host};Port={_cfg.Port};Uid={_cfg.User};Password={_cfg.Password};ConnectionTimeout=5;");
+                await using var c = new MySqlConnection(BaseConnString);
                 await c.OpenAsync();
                 await using var cmd = c.CreateCommand();
                 cmd.CommandText = $"CREATE DATABASE IF NOT EXISTS `{_cfg.Database}` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;";
                 await cmd.ExecuteNonQueryAsync();
             }
-            catch { /* 权限不足则继续;库已存在时不影响 */ }
+            catch (Exception ex)
+            {
+                _log.LogDebug(ex, "[CS2Suite] 建库探测跳过(通常是无建库权限,库已存在时不影响)");
+            }
 
             if (!_cfg.AutoCreateTables) { Ready = true; return true; }
 
+            // ★ 复用单条连接执行全部 DDL:避免 19 次握手,
+            //   也避免游戏进程启动期大量并发连接导致握手超时(实测过该问题)。
+            await using var conn = await OpenAsync();
             foreach (var ddl in SchemaDdl.Statements)
             {
-                await using var c = await OpenAsync();
-                await using var cmd = c.CreateCommand();
+                await using var cmd = conn.CreateCommand();
                 cmd.CommandText = ddl;
                 await cmd.ExecuteNonQueryAsync();
             }
@@ -138,18 +147,36 @@ public sealed class Db : IDisposable
         catch (Exception ex)
         {
             _log.LogError(ex, "[CS2Suite] MySQL 初始化失败(检查 Database 配置)。数据相关功能禁用。");
+            _log.LogError($"[CS2Suite] 实际连接目标: Host='{_cfg.Host}' Port={_cfg.Port} User='{_cfg.User}' Database='{_cfg.Database}' PasswordLength={_cfg.Password?.Length ?? 0}");
             Ready = false;
             return false;
         }
     }
 
+    /// <summary>
+    /// 心跳写入。★ 必须在游戏线程调用:内部读取 Server.MapName / Utilities.GetPlayers()。
+    /// 早期版本用 Task.Run 包裹导致这些调用跑在线程池线程上,
+    /// 异常被上层 try/catch 吞掉 → 服务器列表里永远看不到本服(已在真机复现并修正)。
+    /// </summary>
     public async Task HeartbeatAsync(string mode)
     {
         if (!Ready) return;
-        var map = CounterStrikeSharp.API.Server.MapName;
+
+        // 游戏线程内先取快照
+        string map;
         int players = 0;
-        foreach (var p in CounterStrikeSharp.API.Utilities.GetPlayers())
-            if (!p.IsBot) players++;
+        try
+        {
+            map = CounterStrikeSharp.API.Server.MapName;
+            foreach (var p in CounterStrikeSharp.API.Utilities.GetPlayers())
+                if (p.IsValid && !p.IsBot) players++;
+        }
+        catch (Exception ex)
+        {
+            _log.LogDebug(ex, "[CS2Suite] 心跳快照失败(非游戏线程?),本轮跳过");
+            return;
+        }
+
         await ExecuteAsync(
             "INSERT INTO cs2suite_servers (server_id, current_map, current_mode, players, last_heartbeat) " +
             "VALUES (@id,@map,@mode,@pl,NOW()) ON DUPLICATE KEY UPDATE " +
@@ -157,7 +184,32 @@ public sealed class Db : IDisposable
             cmd => { P(cmd, "@id", ServerIdRef); P(cmd, "@map", map); P(cmd, "@mode", mode); P(cmd, "@pl", players); });
     }
 
-    public void HeartbeatSafe(string mode) => _ = Task.Run(() => HeartbeatAsync(mode));
+    /// <summary>从游戏线程发起:仅把纯 DB 写入交给线程池,快照已在调用线程内完成。</summary>
+    public void HeartbeatSafe(string mode)
+    {
+        if (!Ready) { _log.LogWarning("[CS2Suite] 心跳跳过:数据库未就绪"); return; }
+        string map;
+        int players = 0;
+        try
+        {
+            map = CounterStrikeSharp.API.Server.MapName;
+            foreach (var p in CounterStrikeSharp.API.Utilities.GetPlayers())
+                if (p.IsValid && !p.IsBot) players++;
+        }
+        catch (Exception ex) { _log.LogWarning(ex, "[CS2Suite] 心跳快照失败"); return; }
+
+        var id = ServerIdRef;
+        _log.LogInformation($"[CS2Suite] 心跳写入: id={id} map={map} mode={mode} players={players}");
+        _ = Task.Run(async () =>
+        {
+            await ExecuteAsync(
+                "INSERT INTO cs2suite_servers (server_id, current_map, current_mode, players, last_heartbeat) " +
+                "VALUES (@id,@map,@mode,@pl,NOW()) ON DUPLICATE KEY UPDATE " +
+                "current_map=@map,current_mode=@mode,players=@pl,last_heartbeat=NOW();",
+                cmd => { P(cmd, "@id", id); P(cmd, "@map", map); P(cmd, "@mode", mode); P(cmd, "@pl", players); });
+            _log.LogInformation("[CS2Suite] 心跳写入完成");
+        });
+    }
 
     public void Dispose() => MySqlConnection.ClearAllPools();
 }

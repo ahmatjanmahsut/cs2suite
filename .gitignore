@@ -41,3 +41,7 @@ tools/ssh/
 
 # 本机部署记录(含数据库凭据,绝不入库)
 DEPLOY-MYSQL-ROUTER.md
+
+# 部署调试临时产物
+tools/dbtest/
+tools/deploy-cache/
