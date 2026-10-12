@@ -45,3 +45,14 @@ DEPLOY-MYSQL-ROUTER.md
 # 部署调试临时产物
 tools/dbtest/
 tools/deploy-cache/
+
+# ---- 本机临时脚本与产物(含凭据/内网信息,绝不入库) ----
+web/_*.cjs
+tools/domtest/_*.cjs
+tools/domtest/_*.js
+tools/domtest/*.txt
+tools/domtest/fixtures/
+tools/auto-update/config.json
+tools/auto-update/state/
+tools/auto-update-upload/
+deploy/openclash/

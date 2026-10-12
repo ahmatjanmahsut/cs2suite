@@ -1,5 +1,6 @@
 
-const { JSDOM } = require('D:/cs2项目/cs2suite/tools/domtest/node_modules/jsdom');
+const path = require("path");
+const { JSDOM } = require(path.join(__dirname, "node_modules", "jsdom"));
 const errors = [];
 const net = [];
 JSDOM.fromURL('http://127.0.0.1:8788/', {
